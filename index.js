@@ -10,7 +10,6 @@ const { width, height } = ctx.canvas;
 let downwardGravity = true;
 let centerGravity = false;
 
-const acceleration = new Vector(0, 0);
 let particles = [];
 
 document.getElementById("add").onclick = () => {
@@ -21,14 +20,15 @@ document.getElementById("add").onclick = () => {
         Math.random() * (height - 2 * radius) + radius
     );
     const vel = new Vector(0, 0);
+    const acceleration = new Vector(0, 0);
 
     particles.push(
         new Particle(pos, radius, vel, acceleration, mass, "#" + ((Math.random() * 0xffffff) << 0).toString(16))
     );
 };
 
-document.getElementById("gravitySelect").onchange = event => {
-    if (event.target.value === "towards each other") clearAccelerations();
+document.getElementById("clear").onclick = () => {
+    particles = [];
 };
 
 const clearAccelerations = () => {
@@ -64,12 +64,14 @@ const loop = timeStamp => {
         centerGravity = false;
     }
 
+    if (!downwardGravity && !centerGravity) clearAccelerations();
+
     for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
             if (!downwardGravity && !centerGravity) {
                 const accArr = gravity(particles[i], particles[j], centerGravity);
-                particles[i].acceleration = accArr[0];
-                particles[j].acceleration = accArr[1];
+                particles[i].acceleration = Vector.add(particles[i].acceleration, accArr[0]);
+                particles[j].acceleration = Vector.add(particles[j].acceleration, accArr[1]);
             }
 
             const velArr = resolveCollision(checkCollision(particles[i], particles[j]), particles[i], particles[j]);
@@ -78,7 +80,7 @@ const loop = timeStamp => {
                 particles[j].velocity = velArr[1];
 
                 particles[i].position = velArr[2];
-                particles[j].posiiton = velArr[3];
+                particles[j].position = velArr[3];
             }
         }
     }
@@ -106,7 +108,8 @@ const gravity = (particle1, particle2, center) => {
         const posDiff = Vector.subtract(particle2.position, particle1.position);
 
         const r = posDiff.length;
-        const force = 6.6743 * 10 ** 1 * ((particle1.mass * particle2.mass) / r ** 2);
+        const G = 6.6743 * 10 ** 4;
+        const force = G * ((particle1.mass * particle2.mass) / r ** 2);
 
         const acc1 = force / particle1.mass;
         const acc2 = force / particle2.mass;
