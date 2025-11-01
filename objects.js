@@ -48,7 +48,7 @@ class Particle {
     }
 
     update(ctx, dt) {
-        const { width, height } = document.getElementById("canvas");
+        const { width, height } = ctx.canvas;
         console.log(dt);
 
         this.velocity = Vector.add(this.velocity, Vector.multiply(this.acceleration, dt));
@@ -63,5 +63,29 @@ class Particle {
         else if (this.position.y + this.radius > height) this.position.y -= this.radius + this.position.y - height;
 
         this.draw(ctx);
+        if (document.getElementById("showVelocity").checked) this.drawVector(ctx, this.velocity, "blue", 0.5);
+        if (document.getElementById("showAcceleration").checked) this.drawVector(ctx, this.acceleration, "red", 0.5);
+    }
+
+    drawVector(ctx, vector, color = "red", scale) {
+        const end = Vector.add(this.position, Vector.multiply(vector, scale));
+
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        ctx.moveTo(this.position.x, this.position.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+
+        const angle = Math.atan2(end.y - this.position.y, end.x - this.position.x);
+        const headLength = 8;
+
+        ctx.beginPath();
+        ctx.moveTo(end.x, end.y);
+        ctx.lineTo(end.x - headLength * Math.cos(angle - Math.PI / 6), end.y - headLength * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(end.x - headLength * Math.cos(angle + Math.PI / 6), end.y - headLength * Math.sin(angle + Math.PI / 6));
+        ctx.lineTo(end.x, end.y);
+        ctx.fillStyle = color;
+        ctx.fill();
     }
 }
